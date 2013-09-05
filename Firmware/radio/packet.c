@@ -100,11 +100,13 @@ static void check_heartbeat(__xdata uint8_t * __pdata buf)
 static 
 uint8_t mavlink_frame(uint8_t max_xmit, __xdata uint8_t * __pdata buf)
 {
-	__data uint16_t slen;
+	__xdata uint16_t slen, offset = 0, high_offset;
 
 	last_sent_len = 0;
 	mav_pkt_len = 0;
 
+	high_offset = (feature_mavlink_framing == MAVLINK_FRAMING_HIGHPRI) ? extract_hipri(max_xmit) : -1;
+	  
 	slen = serial_read_available();
 
 	// see if we have more complete MAVLink frames in the serial
@@ -146,6 +148,7 @@ uint8_t mavlink_frame(uint8_t max_xmit, __xdata uint8_t * __pdata buf)
                         
 		last_sent_len += c;
 		slen -= c;
+		offset += c;
 	}
 
 	return last_sent_len;
