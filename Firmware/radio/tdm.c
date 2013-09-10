@@ -1050,8 +1050,6 @@ tdm_init(void)
 		window_width = 0x1fff;
 	}
 
-	printf("shrunk %u\r\n", (unsigned) window_width);
-
 	tx_window_width = window_width;
 
 	// now adjust the packet_latency for the actual preamble
