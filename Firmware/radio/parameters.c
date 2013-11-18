@@ -81,7 +81,11 @@ __code const struct parameter_info {
 /// hold all the parameters when we're rewriting the scratchpad
 /// page anyway.
 ///
-__xdata param_t	parameter_values[PARAM_MAX];
+union param_private {
+	param_t		val;
+	uint8_t		bytes[4];
+};
+__xdata union param_private	parameter_values[PARAM_MAX];
 
 // Three extra bytes, 1 for the number of params and 2 for the checksum
 #define PARAM_FLASH_START   0
@@ -221,7 +225,7 @@ param_set(__data enum ParamID param, __pdata param_t value)
 		break;
 	}
 
-	parameter_values[param] = value;
+	parameter_values[param].val = value;
 
 	return true;
 }
@@ -231,7 +235,7 @@ param_get(__data enum ParamID param)
 {
 	if (param >= PARAM_MAX)
 		return 0;
-	return parameter_values[param];
+	return parameter_values[param].val;
 }
 
 bool read_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
@@ -309,7 +313,7 @@ param_save(void)
 __critical {
 
 	// tag parameters with the current format
-	parameter_values[PARAM_FORMAT] = PARAM_FORMAT_CURRENT;
+	parameter_values[PARAM_FORMAT].val = PARAM_FORMAT_CURRENT;
 
 	// erase the scratch space
 	flash_erase_scratch();
@@ -341,7 +345,7 @@ param_default(void)
 
 	// set all parameters to their default values
 	for (i = 0; i < PARAM_MAX; i++) {
-		parameter_values[i] = parameter_info[i].default_value;
+		parameter_values[i].val = parameter_info[i].default_value;
 	}
 	
 #if PIN_MAX > 0
