@@ -40,7 +40,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "board.h"
 #include "bootloader.h"
 #include "board_info.h"
 #include "flash.h"
