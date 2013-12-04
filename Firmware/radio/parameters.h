@@ -75,6 +75,9 @@ enum ParamID {
 /// All parameters have this type.
 ///
 typedef uint32_t	param_t;
+#if PIN_MAX > 0
+extern pins_user_info_t pin_values[];
+#endif
 
 /// Set a parameter
 ///

@@ -31,6 +31,8 @@
 ///
 /// golay 23/12 encoding and decoding tables
 ///
+#ifndef _GOLAY23_H_
+#define _GOLAY23_H_
 
 #ifndef _GOLAY23_H_
 #define _GOLAY23_H_

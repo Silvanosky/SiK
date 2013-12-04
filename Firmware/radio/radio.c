@@ -81,7 +81,6 @@ radio_receive_packet(uint8_t *length, __xdata uint8_t * __pdata buf)
 #ifdef INCLUDE_GOLAY
 	__xdata uint8_t gout[3];
 	__data uint16_t crc1, crc2;
-	__data uint8_t errcount = 0;
 	__data uint8_t elen;
 #endif
 
@@ -112,6 +111,8 @@ radio_receive_packet(uint8_t *length, __xdata uint8_t * __pdata buf)
 		// simple unencoded packets
 		radio_receiver_on();
 		return true;
+		
+#ifdef INCLUDE_GOLAY
 	}
 
 #ifdef INCLUDE_GOLAY
@@ -130,7 +131,7 @@ radio_receive_packet(uint8_t *length, __xdata uint8_t * __pdata buf)
 		debug("rx len invalid %u\n", (unsigned)elen);
 		goto failed;
 	}
-
+	
 	// decode the header
 	errcount = golay_decode(6, buf, gout);
 	if (gout[0] != netid[0] ||
