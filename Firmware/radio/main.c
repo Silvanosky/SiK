@@ -110,6 +110,11 @@ bool feature_rtscts;
 
 SEGMENT_VARIABLE (EncryptionKey[32], U8, SEG_XDATA);
 SEGMENT_VARIABLE (DecryptionKey[32], U8, SEG_XDATA);
+SEGMENT_VARIABLE (PlainText[64], U8, SEG_XDATA);
+SEGMENT_VARIABLE (CipherText[64], U8, SEG_XDATA);
+SEGMENT_VARIABLE (InitialVector[16], U8, SEG_XDATA);
+SEGMENT_VARIABLE (Counter[16], U8, SEG_XDATA);
+
 const SEGMENT_VARIABLE (ReferenceEncryptionKey128[16], U8, SEG_CODE) = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
 const SEGMENT_VARIABLE (ReferenceDecryptionKey128[16], U8, SEG_CODE) = {0xD0, 0x14, 0xF9, 0xA8, 0xC9, 0xEE, 0x25, 0x89, 0xE1, 0x3F, 0x0C, 0xC8, 0xB6, 0x63, 0x0C, 0xA6};
 #endif
