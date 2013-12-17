@@ -49,6 +49,7 @@ static volatile __bit ping_pong;
 __pdata struct radio_settings settings;
 
 
+
 // internal helper functions
 //
 static void	register_write(uint8_t reg, uint8_t value) __reentrant;
@@ -1333,4 +1334,5 @@ rxfail:
   P1 &= ~0x02;
 #endif // DEBUG_PINS_RADIO_TX_RX
 }
+
 

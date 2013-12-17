@@ -41,6 +41,7 @@
 #include "tdm.h"
 #include "timer.h"
 #include "freq_hopping.h"
+#include "AES/aes.h"
 
 #ifdef INCLUDE_AES
 #include "AES/aes.h"
@@ -123,10 +124,12 @@ void
 main(void)
 {
 #ifdef CPU_SI1030
-	uint8_t i, status;
+	uint8_t i;
+	__xdata unsigned char str[252];
+	__xdata unsigned char *result;
 	PSBANK = 0x33;
 #endif
-	
+
 	// Stash board info from the bootloader before we let anything touch
 	// the SFRs.
 	//
