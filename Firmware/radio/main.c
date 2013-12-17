@@ -126,7 +126,9 @@ main(void)
 #ifdef CPU_SI1030
 	uint8_t i;
 	__xdata unsigned char str[252];
-	__xdata unsigned char *result;
+	__xdata unsigned char strtmp[252];
+	__xdata unsigned char *in_str;
+	__xdata unsigned char *out_str;
 	PSBANK = 0x33;
 #endif
 
