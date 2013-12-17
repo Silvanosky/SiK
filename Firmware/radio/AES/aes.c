@@ -222,6 +222,12 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 		default:
 			key_size_code = ENCRYPTION_128_BITS;
 	}
+	
+	// We Always Pad the last 16 bytes.
+	// If we don't find a pile of 10 10 10....10 in the last block
+	// then we know that the last block was incomplete
+	// e.g. 01 02 03 05 06 01 02 03 05 06 06 01 was just 15 bytes long...and the
+	// last byte is a 01...is padding
 
 
 	// Get crypto type...
