@@ -568,7 +568,7 @@ bool
 radio_initialise(void)
 {
 	uint8_t status;
-
+	
 	delay_msec(50);
 
 	// make sure there is a radio on the SPI bus
