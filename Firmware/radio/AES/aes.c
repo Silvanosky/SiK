@@ -286,7 +286,7 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	int8_t key_size_code;
 	uint8_t status;
 	uint8_t blocks;
-        // uint8_t  i;   // FOR DEBUGGING
+//        uint8_t  i;   // FOR DEBUGGING
 	__xdata unsigned char *ct;
 
 	// Make sure we have something to decrypt
@@ -345,6 +345,8 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 			
 
 	// Set size of decrypted ciper text, taking into account the padding
+	*out_len = in_len - out_str[16 * blocks - 1];
+
 	*out_len = in_len - out_str[16 * blocks - 1];
 
 	return status;

@@ -124,7 +124,7 @@ void
 main(void)
 {
 #ifdef CPU_SI1030
-	uint8_t i;
+	uint8_t i, len1, len2;
 	__xdata unsigned char str[240];
 	__xdata unsigned char strtmp[240];
 	__xdata unsigned char strtmp2[240];
