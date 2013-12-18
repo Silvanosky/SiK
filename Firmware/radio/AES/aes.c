@@ -41,14 +41,11 @@
 __xdata unsigned char *EncryptionKey;
 SEGMENT_VARIABLE (DecryptionKey[32], U8, SEG_XDATA);
 SEGMENT_VARIABLE (InitialVector[16], U8, SEG_XDATA);
-SEGMENT_VARIABLE (Counter[16], U8, SEG_XDATA);
 
 // The following four will eventually be provided by user and by other means
 // They are here at present, to get the encryption/decryption working
 const SEGMENT_VARIABLE (Nonce[16], U8, SEG_CODE) = {0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff};
 const SEGMENT_VARIABLE (ReferenceInitialVector[16] , U8, SEG_CODE) = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-const SEGMENT_VARIABLE (Nonce[16], U8, SEG_CODE) = {0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff};
-
 
 // Used to hold data that we are going to encrypt
 static __xdata uint8_t encrypt_packet[MAX_ENCRYPT_PACKET_LENGTH];
@@ -198,8 +195,8 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	int8_t key_size_code;
 	uint8_t status;
 	uint8_t blocks;
-        // uint8_t  i;   // FOR DEBUGGING
 	__xdata unsigned char *pt;
+//        uint8_t  i;   // FOR DEBUGGING
 
 	// Make sure we have something to encrypt
 	if (in_len == 0) return 0;
@@ -286,8 +283,8 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	int8_t key_size_code;
 	uint8_t status;
 	uint8_t blocks;
-//        uint8_t  i;   // FOR DEBUGGING
 	__xdata unsigned char *ct;
+//        uint8_t  i;   // FOR DEBUGGING
 
 	// Make sure we have something to decrypt
 	if (in_len == 0) return 0;
@@ -347,6 +344,7 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// Set size of decrypted ciper text, taking into account the padding
 	*out_len = in_len - out_str[16 * blocks - 1];
 
+	// Set size of decrypted ciper text, taking into account the padding
 	*out_len = in_len - out_str[16 * blocks - 1];
 
 	return status;
