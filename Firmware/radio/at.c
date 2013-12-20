@@ -251,6 +251,9 @@ at_command(void)
 				at_plus_counter = ATP_COUNT_1S;
 				at_mode_active = 0;
 				break;
+			case 'E':
+				at_e();
+				break;
 			case 'S':
 				at_s();
 				break;
@@ -389,6 +392,41 @@ at_s(void)
 	}
 	at_error();
 }
+
+
+static void 
+at_e(void)
+{
+
+        __pdata uint8_t         sreg;
+        __xdata unsigned char   *val;
+
+        // get the register number first
+        idx = 3;
+        sreg = at_parse_number();
+        // validate the selected sreg
+        if (sreg >= PARAM_MAX) {
+                at_error();
+                return;
+        }
+
+        switch (at_cmd[idx]) {
+        case '?':
+                val = param_get_encryption_key();
+		print_hex_codes(val);
+                return;
+
+        case '=':
+                if (param_set_encryption_key((__xdata unsigned char *)&at_cmd[4])) {
+                        at_ok();
+                        return;
+                }
+                break;
+        }
+        at_error();
+
+}
+
 
 static void
 at_r(void)
