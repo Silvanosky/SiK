@@ -251,9 +251,11 @@ at_command(void)
 				at_plus_counter = ATP_COUNT_1S;
 				at_mode_active = 0;
 				break;
+#ifdef CPU_SI1030
 			case 'E':
 				at_e();
 				break;
+#endif
 			case 'S':
 				at_s();
 				break;
@@ -394,6 +396,7 @@ at_s(void)
 }
 
 
+#ifdef CPU_SI1030
 static void 
 at_e(void)
 {
@@ -426,7 +429,7 @@ at_e(void)
         at_error();
 
 }
-
+#endif
 
 static void
 at_r(void)

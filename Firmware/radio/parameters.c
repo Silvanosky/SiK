@@ -79,11 +79,10 @@ __code const struct parameter_s_info {
 __code const pins_user_info_t pins_defaults = PINS_USER_INFO_DEFAULT;
 
 
+#ifdef CPU_SI1030
 // Holds the encrpytion string
 __xdata unsigned char encryption_key[16]; 
-
-// Holds the default encryption string 
-// static __xdata unsigned char encryption_key_def[] = {0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61};
+#endif
 
 /// In-RAM parameter store.
 ///
@@ -324,8 +323,6 @@ read_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
 		printf("%d-%d\n",i,input[i-start]);
 	}
 	
-// printf("Reading from i:%d %u\n", i, input[i-start]);
-
 	// verify checksum
 	if (crc16(size, input) != ((uint16_t) flash_read_scratch(i+1)<<8 | flash_read_scratch(i)))
 		return false;
