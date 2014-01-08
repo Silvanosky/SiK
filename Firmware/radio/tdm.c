@@ -47,6 +47,10 @@
 #include "AES/aes.h"
 #endif // INCLUDE_AES
 
+#ifdef CPU_SI1030
+#include "AES/aes.h"
+#endif
+
 #define USE_TICK_YIELD 1
 
 /// the state of the tdm system

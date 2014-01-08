@@ -41,7 +41,10 @@
 #include "tdm.h"
 #include "timer.h"
 #include "freq_hopping.h"
+
+#ifdef CPU_SI1030
 #include "AES/aes.h"
+#endif
 
 #ifdef INCLUDE_AES
 #include "AES/aes.h"

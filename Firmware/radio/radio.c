@@ -79,10 +79,16 @@ static void	clear_status_registers(void);
 bool
 radio_receive_packet(uint8_t *length, __xdata uint8_t * __pdata buf)
 {
+//	__xdata uint8_t i;
 #ifdef INCLUDE_GOLAY
 	__xdata uint8_t gout[3];
 	__data uint16_t crc1, crc2;
 	__data uint8_t elen;
+#endif
+
+#ifdef CPU_SI1030
+        __xdata uint8_t len_decrypted;
+        __xdata uint8_t pbuf_decrypted[MAX_PACKET_LENGTH];
 #endif
 
 	if (!packet_received) {
@@ -322,6 +328,7 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 		panic("oversized packet");
 	}
 
+
 	radio_clear_transmit_fifo();
 
 	register_write(EZRADIOPRO_TRANSMIT_PACKET_LENGTH, length);
@@ -510,8 +517,9 @@ radio_transmit_golay(uint8_t length, __xdata uint8_t * __pdata buf, __pdata uint
 // @return	    true if packet sent successfully
 //
 bool
-radio_transmit(uint8_t length, __xdata uint8_t * __pdata buf, __pdata uint16_t timeout_ticks)
+radio_transmit(uint8_t len, __xdata uint8_t * __pdata data, __pdata uint16_t timeout_ticks)
 {
+//	__xdata uint8_t i;
 	bool ret;
 
 	EX0_SAVE_DISABLE;

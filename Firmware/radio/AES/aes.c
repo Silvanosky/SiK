@@ -92,6 +92,26 @@ void aes_set_encryption_level(uint8_t encryption)
 }
 
 
+uint8_t encryption_level;
+
+
+// Indicate if encryption subsystem initialised and ready.
+//
+// returns a bool
+uint8_t aes_get_encryption_level()
+{
+        return encryption_level;
+}
+
+
+// Set status of initialistion of aes encryption
+//
+void aes_set_encryption_level(uint8_t encryption)
+{
+        encryption_level = encryption;
+}
+
+
 
 // Generate EncryptionKey from aes key string provided (or default one if one provided is invalid)
 //
