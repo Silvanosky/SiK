@@ -78,12 +78,6 @@ __code const struct parameter_s_info {
 
 __code const pins_user_info_t pins_defaults = PINS_USER_INFO_DEFAULT;
 
-
-#ifdef CPU_SI1030
-// Holds the encrpytion string
-__xdata unsigned char encryption_key[16]; 
-#endif
-
 /// In-RAM parameter store.
 ///
 /// It seems painful to have to do this, but we need somewhere to
