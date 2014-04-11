@@ -974,7 +974,33 @@ golay_test(void)
     }
   }
 }
+
 #endif
+
+
+// test xtea encryption timing
+static void 
+xtea_test(void)
+{
+	uint8_t i;
+	uint16_t t1, t2;
+	for (i=0; i<MAX_PACKET_LENGTH; i++) {
+		pbuf[i] = i;
+	}
+	t1 = timer2_tick();
+	xtea_encrypt(pbuf, MAX_PACKET_LENGTH);
+	t2 = timer2_tick();
+	printf("xtea encrypt %u bytes took %u 16usec ticks\n",
+	       (unsigned)MAX_PACKET_LENGTH,
+	       t2-t1);
+
+	t1 = timer2_tick();
+	xtea_decrypt(pbuf, MAX_PACKET_LENGTH);
+	t2 = timer2_tick();
+	printf("xtea decrypt %u bytes took %u 16usec ticks\n",
+	       (unsigned)MAX_PACKET_LENGTH,
+	       t2-t1);
+}
 
 
 // initialise the TDM subsystem
@@ -1074,6 +1100,8 @@ tdm_init(void)
 	// tdm_test_timing();
 	
 	// golay_test();
+
+	xtea_test();
 }
 
 /// report tdm timings

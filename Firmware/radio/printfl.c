@@ -46,7 +46,7 @@
  */
 #include "radio.h"
 
-static __data char radix;
+static __xdata char radix;
 static __bit long_flag = 0;
 static __bit string_flag = 0;
 static __bit char_flag = 0;
@@ -159,8 +159,8 @@ vprintfl(const char * fmt, va_list ap) __reentrant
 			}
 
 			if (radix) {
-				static char __idata buffer[12]; /* 37777777777(oct) */
-				char __idata * stri;
+				static char __xdata buffer[12]; /* 37777777777(oct) */
+				char __xdata * stri;
 
 				if (unsigned_flag) {
 					_ultoa(val, buffer, radix);
