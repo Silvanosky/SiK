@@ -85,8 +85,17 @@ __code const pins_user_info_t pins_defaults = PINS_USER_INFO_DEFAULT;
 /// page anyway.
 ///
 __xdata param_t	parameter_values[PARAM_MAX];
+
+// Three extra bytes, 1 for the number of params and 2 for the checksum
+#define PARAM_FLASH_START		1
+#define PARAM_FLASH_END			(PARAM_FLASH_START + sizeof(parameter_values) + 2)
+
 #if PIN_MAX > 0
 __xdata pins_user_info_t pin_values[PIN_MAX];
+
+// Place the start away from the other params to allow for expantion 2<<6 = 128
+#define PIN_FLASH_START (2<<6)
+#define PIN_FLASH_END		(PIN_FLASH_START + sizeof(pin_values) + 2)
 #endif
 
 // Three extra bytes, 1 for the number of params and 2 for the checksum
@@ -244,9 +253,9 @@ param_get(__data enum ParamID param)
 	return parameter_values[param];
 }
 
-bool read_params(__xdata uint8_t * __data input, uint8_t start, uint8_t size)
+bool read_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
 {
-	uint8_t		i;
+	uint16_t		i;
 	
 	for (i = start; i < start+size; i ++)
 		input[i-start] = flash_read_scratch(i);
@@ -257,10 +266,9 @@ bool read_params(__xdata uint8_t * __data input, uint8_t start, uint8_t size)
 	return true;
 }
 
-void write_params(__xdata uint8_t * __data input, uint8_t start, uint8_t size)
+void write_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
 {
-	uint8_t		i;
-	uint16_t	checksum;
+	uint16_t	i, checksum;
 
 	// save parameters to the scratch page
 	for (i = start; i < start+size; i ++)
