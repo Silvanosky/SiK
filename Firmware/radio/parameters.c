@@ -50,7 +50,7 @@
 
 /// In-ROM parameter info table.
 ///
-__code const struct parameter_info {
+__code const struct parameter_s_info {
 	const char	*name;
 	param_t		default_value;
 } parameter_info[PARAM_MAX] = {
@@ -84,18 +84,23 @@ __code const pins_user_info_t pins_defaults = PINS_USER_INFO_DEFAULT;
 /// hold all the parameters when we're rewriting the scratchpad
 /// page anyway.
 ///
-__xdata param_t	parameter_values[PARAM_MAX];
+__xdata param_t	parameter_s_values[PARAM_S_MAX];
+__xdata param_t	parameter_r_values[PARAM_R_MAX];
 
 // Three extra bytes, 1 for the number of params and 2 for the checksum
-#define PARAM_FLASH_START		1
-#define PARAM_FLASH_END			(PARAM_FLASH_START + sizeof(parameter_values) + 2)
+#define PARAM_S_FLASH_START   0
+#define PARAM_S_FLASH_END     (PARAM_S_FLASH_START + sizeof(parameter_s_values) + 3)
+
+// Three extra bytes, 1 for the number of params and 2 for the checksum, starts at position 128
+#define PARAM_R_FLASH_START   (2<<6)
+#define PARAM_R_FLASH_END     (PARAM_R_FLASH_START + sizeof(parameter_r_values) + 3)
 
 #if PIN_MAX > 0
 __xdata pins_user_info_t pin_values[PIN_MAX];
 
-// Place the start away from the other params to allow for expantion 2<<6 = 128
-#define PIN_FLASH_START (2<<6)
-#define PIN_FLASH_END		(PIN_FLASH_START + sizeof(pin_values) + 2)
+// Place the start away from the other params to allow for expantion 2<<7 = 256
+#define PIN_FLASH_START       (2<<7)
+#define PIN_FLASH_END         (PIN_FLASH_START + sizeof(pin_values) + 2)
 #endif
 
 // Three extra bytes, 1 for the number of params and 2 for the checksum
@@ -135,15 +140,16 @@ typedef char p2eCheck[(PIN_FLASH_END < PARAM_E_FLASH_START) ? 0 : -1];
 typedef char endCheck[(PARAM_E_FLASH_END < 1023) ? 0 : -1];
 
 static bool
-param_check(__pdata enum ParamID id, __data uint32_t val)
+param_s_check(__pdata enum Param_S_ID id, __data uint32_t val)
 {
 	// parameter value out of range - fail
-	if (id >= PARAM_MAX)
+	if (id >= PARAM_S_MAX)
 		return false;
 
 	switch (id) {
-	case PARAM_FORMAT:
-		return false;
+	case PARAM_S_FORMAT:
+		if(PARAM_S_FORMAT_CURRENT != val)
+			return false;
 
 	case PARAM_SERIAL_SPEED:
 		return serial_device_valid_speed(val);
@@ -194,10 +200,10 @@ param_check(__pdata enum ParamID id, __data uint32_t val)
 }
 
 bool
-param_set(__data enum ParamID param, __pdata param_t value)
+param_s_set(__data enum Param_S_ID param, __pdata param_t value)
 {
 	// Sanity-check the parameter value first.
-	if (!param_check(param, value))
+	if (!param_s_check(param, value))
 		return false;
 
 	// some parameters we update immediately
@@ -240,25 +246,77 @@ param_set(__data enum ParamID param, __pdata param_t value)
 		break;
 	}
 
-	parameter_values[param] = value;
+	parameter_s_values[param] = value;
 
 	return true;
 }
 
 param_t
-param_get(__data enum ParamID param)
+param_s_get(__data enum Param_S_ID param)
 {
-	if (param >= PARAM_MAX)
+	if (param >= PARAM_S_MAX)
 		return 0;
-	return parameter_values[param];
+	return parameter_s_values[param];
 }
 
-bool read_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
+static bool
+param_r_check(__pdata enum Param_R_ID id, __data uint32_t val)
 {
-	uint16_t		i;
+	// parameter value out of range - fail
+	if (id >= PARAM_R_MAX)
+		return false;
 	
-	for (i = start; i < start+size; i ++)
+	switch (id) {
+		case PARAM_R_FORMAT:
+			if(PARAM_R_FORMAT_CURRENT != val)
+				return false;
+			
+		case PARAM_R_TARGET_RSSI:
+			if (20 > val || 255 < val)
+				return false;
+		default:
+			// no sanity check for this value
+			break;
+	}
+	return true;
+}
+
+bool
+param_r_set(__data enum Param_R_ID param, __pdata param_t value)
+{
+	// Sanity-check the parameter value first.
+	if (!param_r_check(param, value))
+		return false;
+	
+	// some parameters we update immediately
+	switch (param) {
+		
+		default:
+			break;
+	}
+	
+	parameter_r_values[param] = value;
+	
+	return true;
+}
+
+param_t
+param_r_get(__data enum Param_R_ID param)
+{
+	if (param >= PARAM_R_MAX)
+		return 0;
+	return parameter_r_values[param];
+}
+
+static bool
+read_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
+{
+	__pdata uint16_t		i;
+	
+	for (i = start; i < start+size; i ++){
 		input[i-start] = flash_read_scratch(i);
+		printf("%d-%d\n",i,input[i-start]);
+	}
 	
 	// verify checksum
 	if (crc16(size, input) != ((uint16_t) flash_read_scratch(i+1)<<8 | flash_read_scratch(i)))
@@ -266,13 +324,20 @@ bool read_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
 	return true;
 }
 
-void write_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
+static void
+write_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
 {
-	uint16_t	i, checksum;
+	__pdata uint16_t	i, checksum;
 
+	// We cannot address greater than one page (1023 bytes)
+	if((start + size + 2) > 1023)
+		return;
+	
 	// save parameters to the scratch page
 	for (i = start; i < start+size; i ++)
+	{
 		flash_write_scratch(i, input[i-start]);
+	}
 	
 	// write checksum
 	checksum = crc16(size, input);
@@ -320,13 +385,16 @@ __critical {
 	if (expected > sizeof(parameter_values) || expected < 12*sizeof(param_t))
 		return false;
 	
+	if(!read_params((__xdata uint8_t *)parameter_s_values, PARAM_S_FLASH_START+1, expected))
+		return false;
+
 	// read and verify params
 	if(!read_params((__xdata uint8_t *)parameter_values, PARAM_FLASH_START+1, expected))
 		return false;
 	
 	// decide whether we read a supported version of the structure
-	if (param_get(PARAM_FORMAT) != PARAM_FORMAT_CURRENT) {
-		debug("parameter format %lu expecting %lu", parameters[PARAM_FORMAT], PARAM_FORMAT_CURRENT);
+	if ((param_t) PARAM_S_FORMAT_CURRENT != param_s_get(PARAM_S_FORMAT)) {
+		debug("parameter format %lu expecting %lu", param_s_get(PARAM_S_FORMAT), PARAM_S_FORMAT_CURRENT);
 		return false;
 	}
 	
@@ -355,7 +423,7 @@ param_save(void)
 __critical {
 
 	// tag parameters with the current format
-	parameter_values[PARAM_FORMAT] = PARAM_FORMAT_CURRENT;
+	parameter_s_values[PARAM_S_FORMAT] = PARAM_S_FORMAT_CURRENT;
 
 	// erase the scratch space
 	flash_erase_scratch();
@@ -386,8 +454,13 @@ param_default(void)
 	__pdata uint8_t	i;
 
 	// set all parameters to their default values
-	for (i = 0; i < PARAM_MAX; i++) {
-		parameter_values[i] = parameter_info[i].default_value;
+	for (i = 0; i < PARAM_S_MAX; i++) {
+		parameter_s_values[i] = parameter_s_info[i].default_value;
+	}
+
+	// set all parameters to their default values
+	for (i = 0; i < PARAM_R_MAX; i++) {
+		parameter_r_values[i] = parameter_r_info[i].default_value;
 	}
 	
 #if PIN_MAX > 0
@@ -408,22 +481,43 @@ param_default(void)
 }
 
 enum ParamID
-param_id(__data char * __pdata name)
+param_s_id(__data char * __pdata name)
 {
 	__pdata uint8_t i;
 
-	for (i = 0; i < PARAM_MAX; i++) {
-		if (!strcmp(name, parameter_info[i].name))
+	for (i = 0; i < PARAM_S_MAX; i++) {
+		if (!strcmp(name, parameter_s_info[i].name))
 			break;
 	}
 	return i;
 }
 
 const char *__code
-param_name(__data enum ParamID param)
+param_s_name(__data enum ParamID param)
 {
-	if (param < PARAM_MAX) {
-		return parameter_info[param].name;
+	if (param < PARAM_S_MAX) {
+		return parameter_s_info[param].name;
+	}
+	return 0;
+}
+
+enum ParamID
+param_r_id(__data char * __pdata name)
+{
+	__pdata uint8_t i;
+	
+	for (i = 0; i < PARAM_R_MAX; i++) {
+		if (!strcmp(name, parameter_r_info[i].name))
+			break;
+	}
+	return i;
+}
+
+const char *__code
+param_r_name(__data enum ParamID param)
+{
+	if (param < PARAM_R_MAX) {
+		return parameter_r_info[param].name;
 	}
 	return 0;
 }
