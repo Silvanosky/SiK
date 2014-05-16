@@ -290,7 +290,8 @@ param_r_set(__data enum Param_R_ID param, __pdata param_t value)
 	
 	// some parameters we update immediately
 	switch (param) {
-		
+//		case PARAM_R_TARGET_RSSI:
+//			break;
 		default:
 			break;
 	}

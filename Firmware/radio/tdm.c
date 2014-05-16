@@ -139,6 +139,10 @@ static __bit send_statistics;
 /// set when we should send a MAVLink report pkt
 extern bool seen_mavlink;
 
+// Varibles used to hunt for a target RSSI by changing the power levels
+__pdata uint8_t maxPower, presentPower, target_RSSI;
+
+
 struct tdm_trailer {
 	uint16_t window:13;
 	uint16_t command:1;
@@ -450,6 +454,18 @@ link_update(void)
     temperature_update();
     temperature_count = 0;
   }
+}
+
+// Hunt for target RSSI using remote packet data
+static void update_rssi_target(void)
+{	
+	if(remote_statistics.average_rssi < target_RSSI)
+	{
+		radio_change_transmit_power(true, maxPower);
+	}
+	else {
+		radio_change_transmit_power(false, maxPower);
+	}
 }
 
 // dispatch an AT command to the remote system
