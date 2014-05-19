@@ -139,9 +139,15 @@ static __bit send_statistics;
 /// set when we should send a MAVLink report pkt
 extern bool seen_mavlink;
 
-// Varibles used to hunt for a target RSSI by changing the power levels
-__pdata uint8_t maxPower, presentPower, target_RSSI;
+enum RSSI_Hunt_ID {
+	RSSI_HUNT_UP = 0,
+	RSSI_HUNT_DOWN,
+	RSSI_HUNT_IDLE,
+};
 
+// Varibles used to hunt for a target RSSI by changing the power levels
+__pdata uint8_t maxPower, presentPower, target_RSSI, powerHysteresis;
+__pdata enum RSSI_Hunt_ID Hunt_RSSI;
 
 struct tdm_trailer {
 	uint16_t window:13;
@@ -458,7 +464,8 @@ link_update(void)
 
 // Hunt for target RSSI using remote packet data
 static void update_rssi_target(void)
-{	
+{
+//  powerHysteresis
 	if(remote_statistics.average_rssi < target_RSSI)
 	{
 		radio_change_transmit_power(true, maxPower);
