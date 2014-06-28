@@ -312,6 +312,7 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 {
 	__pdata uint16_t tstart;
 	bool transmit_started;
+	bool just_refilled_tx;
 	__data uint8_t n;
 
 	if (length > sizeof(radio_buffer)) {
@@ -322,10 +323,10 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 
 	register_write(EZRADIOPRO_TRANSMIT_PACKET_LENGTH, length);
 
-	// put packet in the FIFO
+	// put packet bytes in the FIFO, leaving room for the CRC
 	n = length;
-	if (n > TX_FIFO_THRESHOLD_LOW) {
-		n = TX_FIFO_THRESHOLD_LOW;
+	if (n > TX_FIFO_THRESHOLD_HIGH) {
+		n = TX_FIFO_THRESHOLD_HIGH;
 	}
 	radio_write_transmit_fifo(n, buf);
 	length -= n;
@@ -337,6 +338,7 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 
 	preamble_detected = 0;
 	transmit_started = false;
+	just_refilled_tx = true;
 
 	// start TX
 	register_write(EZRADIOPRO_OPERATING_AND_FUNCTION_CONTROL_1, EZRADIOPRO_TXON | EZRADIOPRO_XTON);
@@ -396,19 +398,25 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 
 		// the interrupt status bits only become valid once
 		// the transmitter is in full tx state
-		status = register_read(EZRADIOPRO_DEVICE_STATUS);
-		if (status & 0x02) {
-			// the chip power status is in TX mode
-			transmit_started = true;
-			continue;
-		}
-		if (transmit_started && (status & 0x02) == 0) {
-			// transmitter has finished. See if we got the
-			// whole packet out
+		} else if (transmit_started) {
 			if (length != 0) {
-				debug("TX short %u\n", (unsigned)length);
-				if (errors.tx_errors != 0xFFFF) {
-					errors.tx_errors++;
+				// see if we can put some more bytes into the FIFO.
+				// Use hysteresis when sampling the almost empty bit
+				// since it updates only on internal TX domain clock
+				// cycles (see EZRadioPro detailed register
+				// descriptions, AN440).
+				interrupt_status = register_read(EZRADIOPRO_INTERRUPT_STATUS_1);
+				if ((interrupt_status & EZRADIOPRO_ITXFFAEM) == 0) {
+					just_refilled_tx = false;
+				} else if (!just_refilled_tx) {
+					n = TX_FIFO_THRESHOLD_HIGH - (TX_FIFO_THRESHOLD_LOW + 1);
+					if (n > length) {
+						n = length;
+					}
+					radio_write_transmit_fifo(n, buf);
+					just_refilled_tx = true;
+					length -= n;
+					buf += n;
 				}
 #ifdef DEBUG_PINS_RADIO_TX_RX
         P1 &= ~0x01;
@@ -420,7 +428,6 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 #endif // DEBUG_PINS_RADIO_TX_RX
 			return true;
 		}
-
 	}
 #ifdef DEBUG_PINS_RADIO_TX_RX
   P1 &= ~0x01;
@@ -435,7 +442,7 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 	if (errors.tx_errors != 0xFFFF) {
 		errors.tx_errors++;
 	}
-
+	
 	return false;
 }
 
