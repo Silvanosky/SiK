@@ -36,7 +36,7 @@
 #include "crc.h"
 #include "pins_user.h"
 
-__xdata uint8_t radio_buffer[MAX_PACKET_LENGTH];
+__xdata uint8_t radio_buffer[2][MAX_PACKET_LENGTH];
 __pdata uint8_t receive_packet_length;
 __pdata uint8_t partial_packet_length;
 __pdata uint8_t last_rssi;
@@ -44,6 +44,7 @@ __pdata uint8_t netid[2];
 
 static volatile __bit packet_received;
 static volatile __bit preamble_detected;
+static volatile __bit ping_pong;
 
 __pdata struct radio_settings settings;
 
@@ -117,7 +118,7 @@ radio_receive_packet(uint8_t *length, __xdata uint8_t * __pdata buf)
 	// decode it in the callers buffer. This relies on the
 	// in-place decode properties of the golay code. Decoding in
 	// this way allows us to overlap decoding with the next receive
-	memcpy(buf, radio_buffer, receive_packet_length);
+	memcpy(buf, radio_buffer[ping_pong], receive_packet_length);
 
 	// enable the receiver for the next packet. This also
 	// enables the EX0 interrupt
@@ -315,7 +316,7 @@ radio_transmit_simple(__data uint8_t length, __xdata uint8_t * __pdata buf, __pd
 	bool just_refilled_tx;
 	__data uint8_t n;
 
-	if (length > sizeof(radio_buffer)) {
+	if (length > sizeof(radio_buffer[0])) {
 		panic("oversized packet");
 	}
 
@@ -462,7 +463,7 @@ radio_transmit_golay(uint8_t length, __xdata uint8_t * __pdata buf, __pdata uint
 	__xdata uint8_t gin[3];
 	__pdata uint8_t elen, rlen;
 
-	if (length > (sizeof(radio_buffer)/2)-6) {
+	if (length > (sizeof(radio_buffer[0])/2)-6) {
 		debug("golay packet size %u\n", (unsigned)length);
 		panic("oversized golay packet");		
 	}
@@ -479,7 +480,7 @@ radio_transmit_golay(uint8_t length, __xdata uint8_t * __pdata buf, __pdata uint
 	gin[2] = length;
 
 	// golay encode the header
-	golay_encode(3, gin, radio_buffer);
+	golay_encode(3, gin, radio_buffer[ping_pong]);
 
 	// next add a CRC, we round to 3 bytes for simplicity, adding 
 	// another copy of the length in the spare byte
@@ -489,12 +490,12 @@ radio_transmit_golay(uint8_t length, __xdata uint8_t * __pdata buf, __pdata uint
 	gin[2] = length;
 
 	// golay encode the CRC
-	golay_encode(3, gin, &radio_buffer[6]);
+	golay_encode(3, gin, &radio_buffer[ping_pong][6]);
 
 	// encode the rest of the payload
-	golay_encode(rlen, buf, &radio_buffer[12]);
+	golay_encode(rlen, buf, &radio_buffer[ping_pong][12]);
 
-	return radio_transmit_simple(elen, radio_buffer, timeout_ticks);
+	return radio_transmit_simple(elen, radio_buffer[ping_pong], timeout_ticks);
 }
 #endif // INCLUDE_GOLAY
 
@@ -544,16 +545,10 @@ radio_receiver_on(void)
 
 	packet_received = 0;
 	receive_packet_length = 0;
-	preamble_detected = 0;
-	partial_packet_length = 0;
 
 	// enable receive interrupts
 	register_write(EZRADIOPRO_INTERRUPT_ENABLE_1, RADIO_RX_INTERRUPTS);
 	register_write(EZRADIOPRO_INTERRUPT_ENABLE_2, EZRADIOPRO_ENPREAVAL);
-
-	clear_status_registers();
-	radio_clear_transmit_fifo();
-	radio_clear_receive_fifo();
 
 	// put the radio in receive mode
 	register_write(EZRADIOPRO_OPERATING_AND_FUNCTION_CONTROL_1, EZRADIOPRO_RXON | EZRADIOPRO_XTON);
@@ -1226,7 +1221,7 @@ INTERRUPT(Receiver_ISR, INTERRUPT_INT0)
 			debug("rx pplen=%u\n", (unsigned)partial_packet_length);
 			goto rxfail;
 		}
-		read_receive_fifo(RX_FIFO_THRESHOLD_HIGH, &radio_buffer[partial_packet_length]);
+		read_receive_fifo(RX_FIFO_THRESHOLD_HIGH, &radio_buffer[ping_pong ^ 0x1][partial_packet_length]);
 		partial_packet_length += RX_FIFO_THRESHOLD_HIGH;
 		last_rssi = register_read(EZRADIOPRO_RECEIVED_SIGNAL_STRENGTH_INDICATOR);
 	}
@@ -1250,19 +1245,17 @@ INTERRUPT(Receiver_ISR, INTERRUPT_INT0)
 			goto rxfail;
 		}
 		if (partial_packet_length < len) {
-			read_receive_fifo(len-partial_packet_length, &radio_buffer[partial_packet_length]);
+			read_receive_fifo(len-partial_packet_length, &radio_buffer[ping_pong ^ 0x1][partial_packet_length]);
 		}
 		receive_packet_length = len;
 
 		// we have a full packet
 		packet_received = true;
-
-		// disable interrupts until the tdm code has grabbed the packet
-		register_write(EZRADIOPRO_INTERRUPT_ENABLE_1, 0);
-		register_write(EZRADIOPRO_INTERRUPT_ENABLE_2, 0);
-
-		// go into tune mode
-		register_write(EZRADIOPRO_OPERATING_AND_FUNCTION_CONTROL_1, EZRADIOPRO_PLLON);
+		partial_packet_length = 0;
+		preamble_detected = false;
+		
+		// allow the main program to access the finalized buffer
+		ping_pong ^= 0x1;
 	}
 #ifdef DEBUG_PINS_RADIO_TX_RX
   P1 &= ~0x02;
@@ -1273,6 +1266,8 @@ rxfail:
 	if (errors.rx_errors != 0xFFFF) {
 		errors.rx_errors++;
 	}
+	clear_status_registers();
+	radio_clear_receive_fifo();
 	radio_receiver_on();
 #ifdef DEBUG_PINS_RADIO_TX_RX
   P1 &= ~0x02;
