@@ -583,12 +583,9 @@ radio_initialise(void)
 
 	if ((status & EZRADIOPRO_IPOR) == 0) {
 		// it hasn't powered up cleanly, reset it
-		return software_reset();
-	}
-
-	if (status & EZRADIOPRO_ICHIPRDY) {
-		// already ready
-		return true;
+		if(!software_reset()) {
+			return false;
+		}
 	}
 	
 	return false;
