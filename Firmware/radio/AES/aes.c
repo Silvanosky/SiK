@@ -41,6 +41,7 @@
 __xdata unsigned char *EncryptionKey;
 SEGMENT_VARIABLE (DecryptionKey[32], U8, SEG_XDATA);
 SEGMENT_VARIABLE (InitialVector[16], U8, SEG_XDATA);
+SEGMENT_VARIABLE (Counter[16], U8, SEG_XDATA);
 
 // The following four will eventually be provided by user and by other means
 // They are here at present, to get the encryption/decryption working
@@ -92,6 +93,13 @@ void aes_set_encryption_level(uint8_t encryption)
 }
 
 
+/* Helper definitions  */
+// First nibble = code for # of bits - 1 = 128, 2 = 192, 3 = 256 
+#define	BITS(_l)	(_l)&0xf
+// Second nibble = crypto 0 = CBC, 1 = CTR
+#define	CRYPTO(_l)	(_l>>4)&0xf
+
+// Variables
 uint8_t encryption_level;
 
 
@@ -216,7 +224,6 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	uint8_t status;
 	uint8_t blocks;
 	__xdata unsigned char *pt;
-//        uint8_t  i;   // FOR DEBUGGING
 
 	// Make sure we have something to encrypt
 	if (in_len == 0) return 0;
@@ -243,7 +250,7 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 			key_size_code = ENCRYPTION_128_BITS;
 	}
 	
-	// We Always Pad the last 16 bytes.
+	// We always pad the blocks with up to max 16 bytes.
 	// If we don't find a pile of 10 10 10....10 in the last block
 	// then we know that the last block was incomplete
 	// e.g. 01 02 03 05 06 01 02 03 05 06 06 01 was just 15 bytes long...and the
@@ -304,7 +311,6 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	uint8_t status;
 	uint8_t blocks;
 	__xdata unsigned char *ct;
-//        uint8_t  i;   // FOR DEBUGGING
 
 	// Make sure we have something to decrypt
 	if (in_len == 0) return 0;
