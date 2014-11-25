@@ -939,7 +939,7 @@ radio_change_transmit_power(bool increment, uint8_t maxPower)
 {
 	uint8_t i, power = settings.transmit_power;
 	
-#ifdef _BOARD_RFD900A
+#if defined BOARD_rfd900a || defined BOARD_rfd900p
 	register_write(EZRADIOPRO_TX_POWER, 6); // Set output power of Si1002 to 6 = +10dBm as a nominal level
 	
 	if (increment) {
