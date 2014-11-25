@@ -52,19 +52,19 @@ static __xdata uint8_t last_sent_len;
 static __xdata uint8_t last_recv_len;
 
 // serial speed in 16usecs/byte
-static __pdata uint16_t serial_rate;
+static __xdata uint16_t serial_rate;
 
 // the length of a pending MAVLink packet, or zero if no MAVLink
 // packet is expected
-static __pdata uint8_t mav_pkt_len;
+static __xdata uint8_t mav_pkt_len;
 
 // the timer2_tick time when the MAVLink header was seen
-static __pdata uint16_t mav_pkt_start_time;
+static __xdata uint16_t mav_pkt_start_time;
 
 // the number of timer2 ticks this packet should take on the serial link
-static __pdata uint16_t mav_pkt_max_time;
+static __xdata uint16_t mav_pkt_max_time;
 
-static __pdata uint8_t mav_max_xmit;
+static __xdata uint8_t mav_max_xmit;
 
 // true if we have a injected packet to send
 static bool injected_packet;

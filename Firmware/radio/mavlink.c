@@ -38,7 +38,7 @@
 #include "timer.h"
 
 extern __xdata uint8_t pbuf[MAX_PACKET_LENGTH];
-static __pdata uint8_t seqnum;
+static __xdata uint8_t seqnum;
 
 // new RADIO_STATUS common message
 #define MAVLINK_MSG_ID_RADIO_STATUS 109

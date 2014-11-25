@@ -112,12 +112,12 @@
 //
 //-----------------------------------------------------------------------------
 CBC_ENCRYPT_DECRYPT_STATUS
-   CBC_EncryptDecrypt (CBC_ENCRYPT_DECRYPT_OPERATION operation,
-   VARIABLE_SEGMENT_POINTER(plainText, U8, SEG_XDATA),
-   VARIABLE_SEGMENT_POINTER(cipherText, U8, SEG_XDATA),
-   VARIABLE_SEGMENT_POINTER(initialVector, U8, SEG_XDATA),
-   VARIABLE_SEGMENT_POINTER(key, U8, SEG_XDATA),
-   U16 blocks)
+	CBC_EncryptDecrypt (CBC_ENCRYPT_DECRYPT_OPERATION operation,
+	VARIABLE_SEGMENT_POINTER(plainText, U8, SEG_XDATA),
+	VARIABLE_SEGMENT_POINTER(cipherText, U8, SEG_XDATA),
+	VARIABLE_SEGMENT_POINTER(initialVector, U8, SEG_XDATA),
+	VARIABLE_SEGMENT_POINTER(key, U8, SEG_XDATA),
+	U16 blocks)
 {
    // Unions used for compiler independent endianness.
    UU16 length;                        // Length in bytes for all blocks.
