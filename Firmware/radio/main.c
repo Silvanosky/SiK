@@ -427,7 +427,8 @@ radio_init(void)
 	// add another offset based on network ID. This means that
 	// with different network IDs we will have much lower
 	// interference
-	srand(param_s_get(PARAM_NETID));
+  shuffleRand();
+  
 	if (num_fh_channels > 5) {
 		freq_min += ((unsigned long)(rand()*625)) % channel_spacing;
 	}

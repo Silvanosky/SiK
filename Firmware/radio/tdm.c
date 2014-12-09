@@ -82,9 +82,6 @@ static __bit bonus_transmit;
 /// whether we have yielded our window to the other radio
 static __bit transmit_yield;
 
-/// Have we manualy set the power (during calibration)
-__pdata uint8_t powerManualSet = false;
-
 // activity indication
 // when the 16 bit timer2_tick() value wraps we check if we have received a
 // packet since the last wrap (ie. every second)
