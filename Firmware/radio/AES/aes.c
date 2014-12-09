@@ -153,7 +153,7 @@ bool aes_init(uint8_t encryption_level)
 	aes_set_encryption_level(0);  // Initially set to zero - no encryption
 
 	// If encryption level  (first nibble == encryption bits) is zero...no encryption
-	bits = BITS(encryption_level);
+	bits = BITS(encryption);
 	if (bits == 0) return true;
 
 	// From the encryption level, determine code for # of bits for AES functions
@@ -167,7 +167,7 @@ bool aes_init(uint8_t encryption_level)
 	if (status != 0) return false;
 
 	// Get Crypto algo type 
-	crypto_type = CRYPTO(encryption_level);
+	crypto_type = CRYPTO(encryption);
 
 	// Based on the crypto algoithm chosen, determine what other step needs to be 
 	// done and do them
@@ -185,7 +185,7 @@ bool aes_init(uint8_t encryption_level)
 			aesCopyInit2(InitialVector, ReferenceInitialVector);
 	}
 
-	aes_set_encryption_level(encryption_level);  // If up to here, must have been successful
+	aes_set_encryption_level(encryption);  // If up to here, must have been successful
 
 	return true;
 }
@@ -237,15 +237,13 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// ENCRYPTION_256_BITS,                // 0x06
 	switch (BITS(encryption))
 	{
-		case 1:
-			key_size_code = ENCRYPTION_128_BITS;
-			break;	
 		case 2:
 			key_size_code = ENCRYPTION_192_BITS;
 			break;	
 		case 3:
 			key_size_code = ENCRYPTION_256_BITS;
-			break;	
+			break;
+    case 1:
 		default:
 			key_size_code = ENCRYPTION_128_BITS;
 	}
@@ -277,15 +275,12 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// Based on crypto_type, perform the encryption
 	switch(crypto_type)
 	{
-		case 0:
-			// Validate CBC Mode encryption
-			status = CBC_EncryptDecrypt (key_size_code, pt, out_str, InitialVector, EncryptionKey, blocks);
-			break;
 		case 1:
 			// Perform CTR Mode decryption
 			aesCopyInit2(Counter, Nonce);
 			status = CTR_EncryptDecrypt (key_size_code, pt, out_str, Counter, EncryptionKey, blocks);
 			break;
+    case 0:
 		default:
 			// Validate CBC Mode encryption
 			status = CBC_EncryptDecrypt (key_size_code, pt, out_str, InitialVector, EncryptionKey, blocks);
@@ -324,15 +319,13 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// DECRYPTION_256_BITS,                // 0x02
 	switch (BITS(encryption))
 	{
-		case 1:
-			key_size_code = DECRYPTION_128_BITS;
-			break;	
 		case 2:
 			key_size_code = DECRYPTION_192_BITS;
 			break;	
 		case 3:
 			key_size_code = DECRYPTION_256_BITS;
-			break;	
+			break;
+    case 1:
 		default:
 			key_size_code = DECRYPTION_128_BITS;
 	}
@@ -352,15 +345,12 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// Based on crypto_type, perform the decryption
 	switch(crypto_type)
 	{
-		case 0:
-			// Perform CBC Mode decryption
-			status = CBC_EncryptDecrypt (key_size_code, out_str, ct, InitialVector, DecryptionKey, blocks);
-			break;
 		case 1:
 			// Perform CTR Mode decryption  (For CTR - DecryptionKey = EncryptionKey)
 			aesCopyInit2(Counter, Nonce);
 			status = CTR_EncryptDecrypt (key_size_code, out_str, ct, Counter, EncryptionKey, blocks);
 			break;
+    case 0:
 		default:
 			// Perform CBC Mode decryption
 			status = CBC_EncryptDecrypt (key_size_code, out_str, ct, InitialVector, DecryptionKey, blocks);
