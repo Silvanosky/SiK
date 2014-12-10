@@ -314,7 +314,7 @@ read_params(__xdata uint8_t * __data input, uint16_t start, uint8_t size)
 	
 	for (i = start; i < start+size; i ++){
 		input[i-start] = flash_read_scratch(i);
-		printf("%d-%d\n",i,input[i-start]);
+		//debug("%d-%d\n",i,input[i-start]);
 	}
 	
 	// verify checksum
