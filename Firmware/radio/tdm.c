@@ -462,6 +462,12 @@ link_update(void)
   }
 }
 
+void
+disable_rssi_hunt()
+{
+  Hunt_RSSI = RSSI_HUNT_DISABLE;
+}
+
 // Hunt for target RSSI using remote packet data
 static void update_rssi_target(void)
 {
