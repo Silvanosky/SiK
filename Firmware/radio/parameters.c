@@ -48,6 +48,10 @@
 #include "AES/aes.h"
 #endif // INCLUDE_AES
 
+#ifdef CPU_SI1030
+#include "AES/aes.h"
+#endif // CPU_SI1030
+
 /// In-ROM parameter info table.
 ///
 __code const struct parameter_s_info {
@@ -95,13 +99,15 @@ __xdata param_t	parameter_r_values[PARAM_R_MAX];
 #define PARAM_R_FLASH_START   (2<<6)
 #define PARAM_R_FLASH_END     (PARAM_R_FLASH_START + sizeof(parameter_r_values) + 3)
 
+// Check to make sure the End of the S and the beginning of R dont overlap
+typedef char s2rCheck[(PARAM_S_FLASH_END < PARAM_R_FLASH_START) ? 0 : -1];
+
 #if PIN_MAX > 0
 __xdata pins_user_info_t pin_values[PIN_MAX];
 
 // Place the start away from the other params to allow for expantion 2<<7 = 256
 #define PIN_FLASH_START       (2<<7)
 #define PIN_FLASH_END         (PIN_FLASH_START + sizeof(pin_values) + 2)
-#endif
 
 // Three extra bytes, 1 for the number of params and 2 for the checksum
 #define PARAM_FLASH_START   0

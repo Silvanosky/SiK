@@ -46,6 +46,10 @@
 #include "AES/aes.h"
 #endif
 
+#ifdef CPU_SI1030
+#include "AES/aes.h"
+#endif
+
 // canary data for ram wrap. It is in at.c as the compiler
 // assigns addresses in alphabetial order and we want this at a low
 // address
