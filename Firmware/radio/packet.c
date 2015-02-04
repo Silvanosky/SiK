@@ -41,6 +41,17 @@
 #include "AES/aes.h"
 #endif
 
+#ifdef CPU_SI1030
+#include "AES/aes.h"
+
+//-----------------------------------------------------------------------------
+// Interrupt proto (for SDCC compatibility)
+//-----------------------------------------------------------------------------
+INTERRUPT_PROTO(DMA_ISR, INTERRUPT_DMA0);
+//=============================================================================
+
+#endif
+
 static __bit last_sent_is_resend;
 static __bit last_sent_is_injected;
 static __bit last_recv_is_resend;

@@ -78,6 +78,13 @@ static uint8_t rts_count;
 // flag indicating the transmitter is idle
 static volatile bool			tx_idle;
 
+#ifdef CPU_SI1030  
+// Encrypted packets arn't bigger than 32 bytes
+// Limited by packet.c packet_get_next()
+static __xdata uint8_t len_decrypted;
+static __xdata uint8_t decrypt_buf[32];
+#endif // CPU_SI1030
+
 // FIFO status
 #define BUF_NEXT_INSERT(_b)	((_b##_insert + 1) == sizeof(_b##_buf)?0:(_b##_insert + 1))
 #define BUF_NEXT_REMOVE(_b)	((_b##_remove + 1) == sizeof(_b##_buf)?0:(_b##_remove + 1))
