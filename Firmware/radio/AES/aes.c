@@ -100,15 +100,31 @@ void aes_set_encryption_level(uint8_t encryption)
 #define	CRYPTO(_l)	(_l>>4)&0xf
 
 // Variables
-SEG_XDATA uint8_t encryption_level;
+uint8_t encryption_level;
 
+
+//-----------------------------------------------------------------------------
+// DMA_ISR
+// description:
+//
+// This ISR is needed to support the DMA Idle mode wake up, which is used
+// in the AES functions. Bit 5 of EIE2 should be enabled before going into
+// idle mode. This ISR will disable further interrupts. EA must also be
+// enabled.
+//
+//-----------------------------------------------------------------------------
+INTERRUPT(DMA_ISR, INTERRUPT_DMA0)
+{
+  EIE2 &= ~0x20;                       // disable further interrupts
+  TP11 = false;
+}
 
 // Indicate if encryption subsystem initialised and ready.
 //
 // returns a bool
 uint8_t aes_get_encryption_level()
 {
-	return encryption_level;
+        return encryption_level;
 }
 
 
@@ -116,7 +132,7 @@ uint8_t aes_get_encryption_level()
 //
 void aes_set_encryption_level(uint8_t encryption)
 {
-	encryption_level = encryption;
+        encryption_level = encryption;
 }
 
 
@@ -153,7 +169,7 @@ bool aes_init(uint8_t encryption_level)
 	aes_set_encryption_level(0);  // Initially set to zero - no encryption
 
 	// If encryption level  (first nibble == encryption bits) is zero...no encryption
-	bits = BITS(encryption);
+	bits = BITS(encryption_level);
 	if (bits == 0) return true;
 
 	// From the encryption level, determine code for # of bits for AES functions
@@ -167,7 +183,23 @@ bool aes_init(uint8_t encryption_level)
 	if (status != 0) return false;
 
 	// Get Crypto algo type 
-	crypto_type = CRYPTO(encryption);
+	crypto_type = CRYPTO(encryption_level);
+
+	// Based on the crypto algoithm chosen, determine what other step needs to be 
+	// done and do them
+	switch(crypto_type)
+	{
+		case 0:
+			// Initialise IV
+			aesCopyInit2(InitialVector, ReferenceInitialVector);
+			break;
+		case 1:
+			// Nothing to do. We init "Counter" everytime we do encrypt/decrypt
+			break;
+		default:
+			// Initialise IV
+			aesCopyInit2(InitialVector, ReferenceInitialVector);
+	}
 
 	// Based on the crypto algoithm chosen, determine what other step needs to be 
 	// done and do them
@@ -237,13 +269,15 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// ENCRYPTION_256_BITS,                // 0x06
 	switch (BITS(encryption))
 	{
+		case 1:
+			key_size_code = ENCRYPTION_128_BITS;
+			break;	
 		case 2:
 			key_size_code = ENCRYPTION_192_BITS;
 			break;	
 		case 3:
 			key_size_code = ENCRYPTION_256_BITS;
-			break;
-    case 1:
+			break;	
 		default:
 			key_size_code = ENCRYPTION_128_BITS;
 	}
@@ -275,12 +309,15 @@ uint8_t aes_encrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// Based on crypto_type, perform the encryption
 	switch(crypto_type)
 	{
+		case 0:
+			// Validate CBC Mode encryption
+			status = CBC_EncryptDecrypt (key_size_code, pt, out_str, InitialVector, EncryptionKey, blocks);
+			break;
 		case 1:
 			// Perform CTR Mode decryption
 			aesCopyInit2(Counter, Nonce);
 			status = CTR_EncryptDecrypt (key_size_code, pt, out_str, Counter, EncryptionKey, blocks);
 			break;
-    case 0:
 		default:
 			// Validate CBC Mode encryption
 			status = CBC_EncryptDecrypt (key_size_code, pt, out_str, InitialVector, EncryptionKey, blocks);
@@ -319,13 +356,15 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// DECRYPTION_256_BITS,                // 0x02
 	switch (BITS(encryption))
 	{
+		case 1:
+			key_size_code = DECRYPTION_128_BITS;
+			break;	
 		case 2:
 			key_size_code = DECRYPTION_192_BITS;
 			break;	
 		case 3:
 			key_size_code = DECRYPTION_256_BITS;
-			break;
-    case 1:
+			break;	
 		default:
 			key_size_code = DECRYPTION_128_BITS;
 	}
@@ -345,12 +384,15 @@ uint8_t aes_decrypt(__xdata unsigned char *in_str, uint8_t in_len, __xdata unsig
 	// Based on crypto_type, perform the decryption
 	switch(crypto_type)
 	{
+		case 0:
+			// Perform CBC Mode decryption
+			status = CBC_EncryptDecrypt (key_size_code, out_str, ct, InitialVector, DecryptionKey, blocks);
+			break;
 		case 1:
 			// Perform CTR Mode decryption  (For CTR - DecryptionKey = EncryptionKey)
 			aesCopyInit2(Counter, Nonce);
 			status = CTR_EncryptDecrypt (key_size_code, out_str, ct, Counter, EncryptionKey, blocks);
 			break;
-    case 0:
 		default:
 			// Perform CBC Mode decryption
 			status = CBC_EncryptDecrypt (key_size_code, out_str, ct, InitialVector, DecryptionKey, blocks);
