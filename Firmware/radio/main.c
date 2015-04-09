@@ -281,7 +281,7 @@ hardware_init(void)
 	timer_init();
 
 	// UART - set the configured speed
-	serial_init(param_s_get(PARAM_SERIAL_SPEED));
+	serial_init(param_get(PARAM_SERIAL_SPEED));
 
 	// set all interrupts to the same priority level
 	IP = 0;
@@ -356,14 +356,14 @@ radio_init(void)
 		break;
 	}
 
-	if (param_s_get(PARAM_NUM_CHANNELS) != 0) {
-		num_fh_channels = param_s_get(PARAM_NUM_CHANNELS);
+	if (param_get(PARAM_NUM_CHANNELS) != 0) {
+		num_fh_channels = param_get(PARAM_NUM_CHANNELS);
 	}
-	if (param_s_get(PARAM_MIN_FREQ) != 0) {
-		freq_min        = param_s_get(PARAM_MIN_FREQ) * 1000UL;
+	if (param_get(PARAM_MIN_FREQ) != 0) {
+		freq_min        = param_get(PARAM_MIN_FREQ) * 1000UL;
 	}
-	if (param_s_get(PARAM_MAX_FREQ) != 0) {
-		freq_max        = param_s_get(PARAM_MAX_FREQ) * 1000UL;
+	if (param_get(PARAM_MAX_FREQ) != 0) {
+		freq_max        = param_get(PARAM_MAX_FREQ) * 1000UL;
 	}
 	if (param_s_get(PARAM_TXPOWER) != 0) {
 		txpower = param_s_get(PARAM_TXPOWER);
@@ -401,22 +401,22 @@ radio_init(void)
 	}
 
 	// get the duty cycle we will use
-	duty_cycle = param_s_get(PARAM_DUTY_CYCLE);
+	duty_cycle = param_get(PARAM_DUTY_CYCLE);
 	duty_cycle = constrain(duty_cycle, 0, 100);
-	param_s_set(PARAM_DUTY_CYCLE, duty_cycle);
+	param_set(PARAM_DUTY_CYCLE, duty_cycle);
 
 	// get the LBT threshold we will use
-	lbt_rssi = param_s_get(PARAM_LBT_RSSI);
+	lbt_rssi = param_get(PARAM_LBT_RSSI);
 	if (lbt_rssi != 0) {
 		// limit to the RSSI valid range
 		lbt_rssi = constrain(lbt_rssi, 25, 220);
 	}
-	param_s_set(PARAM_LBT_RSSI, lbt_rssi);
+	param_set(PARAM_LBT_RSSI, lbt_rssi);
 
 	// sanity checks
-	param_s_set(PARAM_MIN_FREQ, freq_min/1000);
-	param_s_set(PARAM_MAX_FREQ, freq_max/1000);
-	param_s_set(PARAM_NUM_CHANNELS, num_fh_channels);
+	param_set(PARAM_MIN_FREQ, freq_min/1000);
+	param_set(PARAM_MAX_FREQ, freq_max/1000);
+	param_set(PARAM_NUM_CHANNELS, num_fh_channels);
 
 	channel_spacing = (freq_max - freq_min) / (num_fh_channels+2);
 
@@ -427,8 +427,7 @@ radio_init(void)
 	// add another offset based on network ID. This means that
 	// with different network IDs we will have much lower
 	// interference
-  shuffleRand();
-  
+	srand(param_get(PARAM_NETID));
 	if (num_fh_channels > 5) {
 		freq_min += ((unsigned long)(rand()*625)) % channel_spacing;
 	}
@@ -444,26 +443,26 @@ radio_init(void)
 	radio_set_channel_spacing(channel_spacing);
 
 	// start on a channel chosen by network ID
-	radio_set_channel(param_s_get(PARAM_NETID) % num_fh_channels);
+	radio_set_channel(param_get(PARAM_NETID) % num_fh_channels);
 
 	// And intilise the radio with them.
-	if (!radio_configure(param_s_get(PARAM_AIR_SPEED)) &&
-	    !radio_configure(param_s_get(PARAM_AIR_SPEED)) &&
-	    !radio_configure(param_s_get(PARAM_AIR_SPEED))) {
+	if (!radio_configure(param_get(PARAM_AIR_SPEED)) &&
+	    !radio_configure(param_get(PARAM_AIR_SPEED)) &&
+	    !radio_configure(param_get(PARAM_AIR_SPEED))) {
 		panic("radio_configure failed");
 	}
 
 	// report the real air data rate in parameters
-	param_s_set(PARAM_AIR_SPEED, radio_air_rate());
+	param_set(PARAM_AIR_SPEED, radio_air_rate());
 
 	// setup network ID
-	radio_set_network_id(param_s_get(PARAM_NETID));
+	radio_set_network_id(param_get(PARAM_NETID));
 
 	// setup transmit power
 	radio_set_transmit_power(txpower);
 	
 	// report the real transmit power in settings
-	param_s_set(PARAM_TXPOWER, radio_get_transmit_power());
+	param_set(PARAM_TXPOWER, radio_get_transmit_power());
 
 #ifdef USE_RTC
 	// initialise real time clock

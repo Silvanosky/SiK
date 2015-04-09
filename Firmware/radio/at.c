@@ -71,7 +71,6 @@ static void	at_ok(void);
 static void	at_error(void);
 static void	at_i(void);
 static void	at_s(void);
-static void	at_r(void);
 static void	at_ampersand(void);
 static void	at_p(void);
 static void	at_plus(void);
@@ -378,14 +377,14 @@ at_s(void)
 	at_parse_number();
 	sreg = at_num;
 	// validate the selected sreg
-	if (sreg >= PARAM_S_MAX) {
+	if (sreg >= PARAM_MAX) {
 		at_error();
 		return;
 	}
 
 	switch (at_cmd[idx]) {
 	case '?':
-		at_num = param_s_get(sreg);
+		at_num = param_get(sreg);
 		printf("%lu\n", at_num);
 		return;
 
@@ -393,7 +392,7 @@ at_s(void)
 		if (sreg > 0) {
 			idx++;
 			at_parse_number();
-			if (param_s_set(sreg, at_num)) {
+			if (param_set(sreg, at_num)) {
 				at_ok();
 				return;
 			}

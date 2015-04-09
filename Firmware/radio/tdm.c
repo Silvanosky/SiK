@@ -51,7 +51,7 @@
 #include "AES/aes.h"
 #endif
 
-#ifdef CPU_SI1030
+#ifdef INCLUDE_AES
 #include "AES/aes.h"
 #endif
 

@@ -37,7 +37,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "radio.h"
 
 // Pin rfd900a  Mapping
 #if defined BOARD_rfd900a || defined BOARD_rfd900p 
