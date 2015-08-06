@@ -266,6 +266,7 @@ _serial_write(register uint8_t c) __reentrant
 
 #ifdef INCLUDE_AES
 // If on appropriate CPU and encryption configured, then attempt to decrypt it
+//joe
 bool
 decryptPackets(void)
 {
@@ -306,6 +307,7 @@ decryptPackets(void)
   return false;
 }
 
+//joe
 void
 serial_decrypt_buf(__xdata uint8_t * buf, __pdata uint8_t count)
 {
@@ -349,6 +351,7 @@ serial_decrypt_buf(__xdata uint8_t * buf, __pdata uint8_t count)
 }
 #endif // INCLUDE_AES
 
+// joe
 // write as many bytes as will fit into the serial transmit buffer
 // if encryption turned on, decrypt the packet.
 void
