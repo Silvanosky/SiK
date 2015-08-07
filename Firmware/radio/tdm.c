@@ -53,7 +53,7 @@
 
 #ifdef INCLUDE_AES
 #include "AES/aes.h"
-#endif
+#endif // INCLUDE_AES
 
 #define USE_TICK_YIELD 1
 
