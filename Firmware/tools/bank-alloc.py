@@ -140,8 +140,8 @@ def bin_pack(modules, bins, log):
 				break
 			else:
 				if bin_id == 'BANK7':
-					print "Failed to allocate", module[0], "with size", module[1], \
-						"to a code bank. This is fatal"
+					print("Failed to allocate", module[0], "with size", module[1], \
+						"to a code bank. This is fatal")
 					return 1
 	return 0
 
@@ -157,10 +157,10 @@ def relocate(module, bank):
 	return
 
 def usage():
-	print 'Usage:'
-	print 'bank-alloc.py project path_to_segment_rules [offset]'
-	print 'bank-alloc.py source_file path_to_segment_rules project'
-	print 'bank-alloc.py hex_file [offset]'
+	print('Usage:')
+	print('bank-alloc.py project path_to_segment_rules [offset]')
+	print('bank-alloc.py source_file path_to_segment_rules project')
+	print('bank-alloc.py hex_file [offset]')
 
 
 if len(sys.argv) < 2:
@@ -204,10 +204,10 @@ if ext == '.ihx':
 	# Load the firmware file
 	fw = firmware(file_name)
 
-	print bankLine
-	print "Bin-Packing results (target allocation):".center(len(bankLine))
-	print bankLine
-	print "Segment - max - alloc -  Start - End Location"
+	print(bankLine)
+	print("Bin-Packing results (target allocation):".center(len(bankLine)))
+	print(bankLine)
+	print("Segment - max - alloc -  Start - End Location")
 	for bank in fw.sanity_check.keys():
 		if bank in bankReserved:
 			thisBank = bankSize-bankReserved[bank]
@@ -215,14 +215,14 @@ if ext == '.ihx':
 			thisBank = bankSize
 		
 		if bank == 0:
-			print "Home".rjust(7),
+			print("Home".rjust(7)),
 		else:
-			print ("Bank %d"%bank).rjust(7),
+			print(("Bank %d"%bank).rjust(7)),
 
-		print str(thisBank).rjust(6),
-		print str(fw.sanity_check[bank][0]).rjust(6),
-		print ("0x%04X"%fw.sanity_check[bank][1]).rjust(8),
-		print ("- 0x%04X"%fw.sanity_check[bank][2])
+		print(str(thisBank).rjust(6)),
+		print(str(fw.sanity_check[bank][0]).rjust(6)),
+		print(("0x%04X"%fw.sanity_check[bank][1]).rjust(8)),
+		print(("- 0x%04X"%fw.sanity_check[bank][2]))
 
 
 		if thisBank - fw.sanity_check[bank][0] < 1:
@@ -234,21 +234,21 @@ if ext == '.ihx':
 		if bank > 3:
 			bankNonexist.append(bank)
 	if len(bankError) > 0:
-		print bankLine
+		print(bankLine)
 		for bank in list(set(bankError)):
 			if bank == 0:
-				print ("-- ERROR: OVER FLOW IN SEGMENT HOME --").center(len(bankLine))
+				print(("-- ERROR: OVER FLOW IN SEGMENT HOME --").center(len(bankLine)))
 			else:
-				print ("-- ERROR: OVER FLOW IN SEGMENT %s --"%bank).center(len(bankLine))
-		print bankLine
+				print(("-- ERROR: OVER FLOW IN SEGMENT %s --"%bank).center(len(bankLine)))
+		print(bankLine)
 		sys.exit(1)
 	if len(bankNonexist) > 0:
-		print bankLine
+		print(bankLine)
 		for bank in list(set(bankNonexist)):
-			print ("-- ERROR: NO SUCH SEGMENT %s --"%bank).center(len(bankLine))
-		print bankLine
+			print(("-- ERROR: NO SUCH SEGMENT %s --"%bank).center(len(bankLine)))
+		print(bankLine)
 		sys.exit(1)
-	print bankLine
+	print(bankLine)
 	exit()
 
 if len(sys.argv) > 2:
@@ -265,9 +265,9 @@ if ext == '.c':
 	# Code Segment determination
 	seg = get_source_seg(file_name, sys.argv[3], segment_rules)
 	if seg is None:
-		print "BANK1"
+		print("BANK1")
 	else:
-		print seg
+		print(seg)
 	exit()
 
 # Bin-Packing
@@ -289,18 +289,18 @@ sizes['total'] = get_total_size(basename)
 sizes['bankable'], sizes['user'] = populate(basename, modules, segment_rules, bins)
 sizes['libs'] = sizes['total'] - sizes['bankable'] - sizes['user']
 
-print 'Total Size =', sizes['total'], 'bytes (' + \
+print('Total Size =', sizes['total'], 'bytes (' + \
 	str(sizes['bankable']), 'bankable,', \
 	str(sizes['user']), 'user-allocated,', \
-	str(sizes['libs']), 'const+libs)'
+	str(sizes['libs']), 'const+libs)')
 
 #bins['HOME'][0] += sizes['libs']
 
-print 'Preallocations: HOME=' + str(bins['HOME'][0]),
+print('Preallocations: HOME=' + str(bins['HOME'][0])),
 for bin_id in ['BANK1', 'BANK2', 'BANK3', 'BANK4', 'BANK5', 'BANK6', 'BANK7']:
 	if bins[bin_id][0] > 0:
-		print ", " + bin_id + "=" + str(bins[bin_id][0]),
-print
+		print(", " + bin_id + "=" + str(bins[bin_id][0])),
+print()
 
 # Account for offset
 offset = 0
