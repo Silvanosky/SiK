@@ -43,13 +43,11 @@
 
 static __bit last_sent_is_resend;
 static __bit last_sent_is_injected;
-static __bit last_recv_is_resend;
+//static __bit last_recv_is_resend;
 static __bit force_resend;
 
-static __xdata uint8_t last_received[MAX_PACKET_LENGTH];
 static __xdata uint8_t last_sent[MAX_PACKET_LENGTH];
 static __xdata uint8_t last_sent_len;
-static __xdata uint8_t last_recv_len;
 
 // serial speed in 16usecs/byte
 static __pdata uint16_t serial_rate;
@@ -395,6 +393,10 @@ packet_set_serial_speed(uint16_t speed)
 bool 
 packet_is_duplicate(uint8_t len, __xdata uint8_t *buf, bool is_resend)
 {
+    (void)len;
+    (void) buf;
+    (void) is_resend;
+    /*
 	if (!is_resend) {
 		memcpy(last_received, buf, len);
 		last_recv_len = len;
@@ -416,6 +418,7 @@ packet_is_duplicate(uint8_t len, __xdata uint8_t *buf, bool is_resend)
 	printf("]\r\n");
 #endif
 	last_recv_is_resend = true;
+    */
 	return false;
 }
 
